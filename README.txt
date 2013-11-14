@@ -1,0 +1,1 @@
+This webapp takes in an expression and outputs a truth table

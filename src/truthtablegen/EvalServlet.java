@@ -11,7 +11,8 @@ import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 
 import java.io.IOException;
-import java.util.Date;
+import java.util.*;
+
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -23,21 +24,46 @@ public class EvalServlet extends HttpServlet {
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
                 throws IOException {
     
-    String express = req.getParameter("content");
-    resp.getWriter().println(express);
+    String exp = req.getParameter("content");
+    resp.getWriter().println(exp);
     
     int varCount = 0;
     String vars = "";
-    for (int i = 0; i < express.length(); i++)
+    for (int i = 0; i < exp.length(); i++)
     {
-    	if (Character.isLetter(express.charAt(i)))
+        //find variables and ignore multiple instances of same variable
+        char currChar = exp.charAt(i)
+    	if (Character.isLetter(currChar) && vars.indexOf(currChar) == -1)
     	{
     		varCount++;
-    		vars += express.charAt(i);
+    		vars += currChar;
     	}
     }
     resp.getWriter().println(vars);
     resp.getWriter().println(varCount);
-    
+
+    int numOfRows = Math.pow(2,varCount);
+    int boolVector = 0x0;
+    List<String> rows = new ArrayList<String>(numOfRows);
+
+    //construct input strings with T/F instead of variables
+    for (int i = 0; i < numOfRows; i++) {
+        int rowString = "";
+        for(int j = 0; j< exp.length(); j++) {
+            int index = vars.indexOf(exp.charAt(j));
+            if (index != -1) {
+                //extract 0 or 1 from boolVector for variable #j
+                int temp = ((boolVector >> (varCount-index-1)) & 1);
+                if (temp == 1) {
+                    rowString += 'T';
+                } else if (temp == 0) {
+                    rowString += 'F';                    
+                }
+            } else {
+                rowString += exp.charAt(j);
+            }
+        }
+        boolVector++;
+        rows.add(rowString);
     }
 }

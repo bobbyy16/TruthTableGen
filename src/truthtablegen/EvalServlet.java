@@ -166,6 +166,32 @@ public class EvalServlet extends HttpServlet {
     resp.getWriter().println("Variables: " + vars);
     resp.getWriter().println("Number of variables: " +varCount);
     
+    int numOfRows = (int)Math.pow(2,varCount);
+    int boolVector = 0x0;
+    List<String> rows = new ArrayList<String>(numOfRows);
+
+    //construct input strings with T/F instead of variables
+    for (int i = 0; i < numOfRows; i++) {
+        String rowString = "";
+        for(int j = 0; j< express.length(); j++) {
+            int index = vars.indexOf(express.charAt(j));
+            if (index != -1) {
+                //extract 0 or 1 from boolVector for variable #j
+                int temp = ((boolVector >> (varCount-index-1)) & 1);
+                if (temp == 1) {
+                    rowString += 'T';
+                } else if (temp == 0) {
+                    rowString += 'F';                    
+                }
+            } else {
+                rowString += express.charAt(j);
+            }
+        }
+        boolVector++;
+        rows.add(rowString);
+    }
+    
+    
     String postfix = toPostFix(express);
     resp.getWriter().println("Postfix: " + postfix);
     

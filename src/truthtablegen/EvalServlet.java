@@ -142,59 +142,51 @@ public class EvalServlet extends HttpServlet {
     public void doPost(HttpServletRequest req, HttpServletResponse resp)
                 throws IOException {
     
-    String express = req.getParameter("content");
-    resp.getWriter().println("Input: " + express);
-    
-    Hashtable<Character, Boolean> unique = new Hashtable<Character, Boolean>();
-    
-    // For HTML purposes
-    int varCount = 0;
-    String vars = "";
-    for (int i = 0; i < express.length(); i++)
-    {
-    	if (Character.isLetter(express.charAt(i)))
-    	{
-    		// if it's a new variable we haven't encountered before
-    		if(unique.get(express.charAt(i)) == null)
-    		{
-    			unique.put(express.charAt(i), true);
-    			varCount++;
-        		vars += express.charAt(i);
-    		}
-    	}
-    }
-    resp.getWriter().println("Variables: " + vars);
-    resp.getWriter().println("Number of variables: " +varCount);
-    
-    int numOfRows = (int)Math.pow(2,varCount);
-    int boolVector = 0x0;
-    List<String> rows = new ArrayList<String>(numOfRows);
-
-    //construct input strings with T/F instead of variables
-    for (int i = 0; i < numOfRows; i++) {
-        String rowString = "";
-        for(int j = 0; j< express.length(); j++) {
-            int index = vars.indexOf(express.charAt(j));
-            if (index != -1) {
-                //extract 0 or 1 from boolVector for variable #j
-                int temp = ((boolVector >> (varCount-index-1)) & 1);
-                if (temp == 1) {
-                    rowString += 'T';
-                } else if (temp == 0) {
-                    rowString += 'F';                    
-                }
-            } else {
-                rowString += express.charAt(j);
-            }
-        }
-        boolVector++;
-        rows.add(rowString);
-    }
-    
-    
-    String postfix = toPostFix(express);
-    resp.getWriter().println("Postfix: " + postfix);
-    
-    }
-    
+	    String express = req.getParameter("content");
+	    resp.getWriter().println("Input: " + express);
+	    
+	    int varCount = 0;
+	    String vars = "";
+	    for (int i = 0; i < express.length(); i++)
+	    {
+	        //find variables and ignore multiple instances of same variable
+	        char currChar = express.charAt(i);
+	    	if (Character.isLetter(currChar) && vars.indexOf(currChar) == -1)
+	    	{
+	    		varCount++;
+	    		vars += currChar;
+	    	}
+	    }
+	    resp.getWriter().println("Variables: " + vars);
+	    resp.getWriter().println("Number of variables: " +varCount);
+	    
+	    int numOfRows = (int)Math.pow(2,varCount);
+	    int boolVector = 0x0;
+	    List<String> rows = new ArrayList<String>(numOfRows);
+	
+	    //construct input strings with T/F instead of variables
+	    for (int i = 0; i < numOfRows; i++) {
+	        String rowString = "";
+	        for(int j = 0; j< express.length(); j++) {
+	            int index = vars.indexOf(express.charAt(j));
+	            if (index != -1) {
+	                //extract 0 or 1 from boolVector for variable #j
+	                int temp = ((boolVector >> (varCount-index-1)) & 1);
+	                if (temp == 1) {
+	                    rowString += 'T';
+	                } else if (temp == 0) {
+	                    rowString += 'F';                    
+	                }
+	            } else {
+	                rowString += express.charAt(j);
+	            }
+	        }
+	        boolVector++;
+	        rows.add(rowString);
+	    }
+	    
+	    for (int i = 0; i < numOfRows; i++) {
+	    	resp.getWriter().println("Postfix: " + toPostFix(rows.get(i)));
+	    }
+	}   
 }

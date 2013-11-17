@@ -224,7 +224,9 @@ public class EvalServlet extends HttpServlet {
 		// header row
 		if (varCount > 0) {
 			resp.setContentType("text/html");
-			resp.getWriter().println("<html>" + "<body>" + "<table>" + "<tr>");
+			resp.getWriter().println("<html>");
+//			resp.getWriter().println("<link type=\"text/css\" rel=\"stylesheet\" href=\"./style.css\">");
+			resp.getWriter().println("<body>" + "<table border=1>" + "<tr>");
 			for (int i = 0; i < varCount; i++) {
 				resp.getWriter().println("<td>" + vars.charAt(i) + "</td>");
 			}

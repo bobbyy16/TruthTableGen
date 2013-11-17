@@ -2,6 +2,7 @@ package truthtablegen;
 
 import java.lang.*;
 import java.util.*;
+
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
@@ -18,45 +19,73 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-
 public class EvalServlet extends HttpServlet {
-	public boolean isValid(char c)
-	{
+	public boolean isValid(char c) {
 		if (Character.isLetter(c) || c == ')')
 			return true;
 		return false;
 	}
-	
-	public int precedence(char c)
-	{
+
+	public int precedence(char c) {
 		String operators = "(|&!";
 		int[] rank = { 0, 1, 2, 3 };
 		int pos = -1;
-		for (int i = 0; i < operators.length(); i++)
-		{
-			if (c == operators.charAt(i))
-			{
+		for (int i = 0; i < operators.length(); i++) {
+			if (c == operators.charAt(i)) {
 				pos = i;
 				break;
 			}
 		}
-		assert(pos != -1);
+		assert (pos != -1);
 		return rank[pos];
 	}
-	
-	public String toPostFix(String infix)
-	{
+
+	public int evaluate(String postfix) {
+		Stack<Boolean> operandStack = new Stack<Boolean>();
+
+		for (int i = 0; i < postfix.length(); i++) {
+			char current = postfix.charAt(i);
+
+			if (current == 'T')
+				operandStack.push(true);
+			else if (current == 'F')
+				operandStack.push(false);
+			else {
+				boolean var1 = (boolean) operandStack.peek();
+				operandStack.pop();
+				if (current == '!')
+					operandStack.push(!var1);
+				else {
+					boolean var2 = (boolean) operandStack.peek();
+					operandStack.pop();
+					if (current == '&')
+						operandStack.push(var1 && var2);
+					else if (current == '|')
+						operandStack.push(var1 || var2);
+					else
+						return -1;
+				}
+			}
+		}
+		boolean result = (boolean) operandStack.peek();
+		
+		if (result)
+			return 1;
+		else
+			return 0;
+
+	}
+	public String toPostFix(String infix) {
 		String postfix = "";
 		String error = "Improperly Formatted";
-		Stack operatorStack = new Stack();
-		
+		Stack<Character> operatorStack = new Stack<Character>();
+
 		char x = '@';
 		int left = 0;
 		int right = 0;
-		
+
 		// Check if expression has matched parantheses
-		for (int i = 0; i < infix.length(); i++)
-		{
+		for (int i = 0; i < infix.length(); i++) {
 			char current = infix.charAt(i);
 			if (current == '(')
 				left++;
@@ -65,20 +94,17 @@ public class EvalServlet extends HttpServlet {
 		}
 		if (left != right)
 			return error;
-		
+
 		String temp = "";
-		for (int i = 0; i < infix.length(); i++)
-		{
+		for (int i = 0; i < infix.length(); i++) {
 			if (infix.charAt(i) != ' ')
 				temp += infix.charAt(i);
 		}
-		
+
 		// Todo: Error checking for other characters?
-		for (int i = 0; i < temp.length(); i++)
-		{
+		for (int i = 0; i < temp.length(); i++) {
 			char current = temp.charAt(i);
-			switch (current)
-			{
+			switch (current) {
 			case '!':
 			case '(':
 				if (isValid(x))
@@ -88,8 +114,7 @@ public class EvalServlet extends HttpServlet {
 			case ')':
 				if (!isValid(x))
 					return error;
-				while (true)
-				{
+				while (true) {
 					if (operatorStack.empty())
 						return error;
 					char top = (char) operatorStack.peek();
@@ -103,8 +128,9 @@ public class EvalServlet extends HttpServlet {
 			case '|':
 				if (!isValid(x))
 					return error;
-				while (!operatorStack.empty() && precedence(current) <= precedence((char) operatorStack.peek()))
-				{
+				while (!operatorStack.empty()
+						&& precedence(current) <= precedence((char) operatorStack
+								.peek())) {
 					postfix += (char) operatorStack.peek();
 					operatorStack.pop();
 				}
@@ -118,119 +144,103 @@ public class EvalServlet extends HttpServlet {
 			}
 			x = current;
 		}
-		
+
 		if (!isValid(x))
 			return error;
-		
-		while (!operatorStack.empty())
-		{
+
+		while (!operatorStack.empty()) {
 			char top = (char) operatorStack.peek();
 			operatorStack.pop();
 			if (top == '(')
 				break;
 			postfix += top;
 		}
-		
+
 		if (postfix.isEmpty())
 			return error;
-		
+
 		return postfix;
 	}
-		
-		
+
 	@Override
-    public void doPost(HttpServletRequest req, HttpServletResponse resp)
-                throws IOException {
-    
-	    String express = req.getParameter("content");
-	    resp.getWriter().println("Input: " + express);
-	    
-	    int varCount = 0;
-	    String vars = "";
-	    for (int i = 0; i < express.length(); i++)
-	    {
-	        //find variables and ignore multiple instances of same variable
-	        char currChar = express.charAt(i);
-	    	if (Character.isLetter(currChar) && vars.indexOf(currChar) == -1)
-	    	{
-	    		varCount++;
-	    		vars += currChar;
-	    	}
-	    }
-	    resp.getWriter().println("Variables: " + vars);
-	    resp.getWriter().println("Number of variables: " +varCount);
-	    
-	    int numOfRows = (int)Math.pow(2,varCount);
-	    int boolVector = 0x0;
-	    List<String> rows = new ArrayList<String>(numOfRows);
-	
-	    //construct input strings with T/F instead of variables
-	    for (int i = 0; i < numOfRows; i++) {
-	        String rowString = "";
-	        for(int j = 0; j< express.length(); j++) {
-	            int index = vars.indexOf(express.charAt(j));
-	            if (index != -1) {
-	                //extract 0 or 1 from boolVector for variable #j
-	                int temp = ((boolVector >> (varCount-index-1)) & 1);
-	                if (temp == 1) {
-	                    rowString += 'T';
-	                } else if (temp == 0) {
-	                    rowString += 'F';                    
-	                }
-	            } else {
-	                rowString += express.charAt(j);
-	            }
-	        }
-	        boolVector++;
-	        rows.add(rowString);
-	    }
-	    
-	    for (int i = 0; i < numOfRows; i++) {
-	    	resp.getWriter().println("Postfix: " + toPostFix(rows.get(i)));
-	    }
-	    
-	    
-//	    //add row for header
-//	    numOfRows++;
-	    
-	    
-	    //reset boolVector
-	    boolVector = 0x0;
-	    
-	    //header row
-	    if (varCount > 0) {
-		    resp.setContentType("text/html");
-		    resp.getWriter().println(
-"<html>" +
-	"<body>" + 
-		"<table>" +
-			"<tr>");
-		    for (int i = 0; i < varCount; i++) {
-		    	resp.getWriter().println(
-		    	"<td>"+
-		    	vars.charAt(i)+
-		    	"</td>");
-		    }
-	    }
-	   
-	    
-	    for (int i = 0; i < numOfRows; i++) {
-	    	resp.getWriter().println(
-	"<tr>");
-	    	for (int j = 0; j < vars.length(); j++) {
-	    		int boolVal = (boolVector >> (varCount-j-1) & 1);
-	    		resp.getWriter().println(
-	    "<td>"+ 
-	    boolVal + 
-	    "</td>");
-	    	}
-	    	boolVector++;
-	    	//TODO: Print evaluate result in this column
-	    	resp.getWriter().println(
-   "</tr>");
-	    }
-	    resp.getWriter().println(
-	"</table>"+
-"</body></html>");
-	}   
+	public void doPost(HttpServletRequest req, HttpServletResponse resp)
+			throws IOException {
+
+		String express = req.getParameter("content");
+		resp.getWriter().println("Input: " + express);
+
+		int varCount = 0;
+		String vars = "";
+		for (int i = 0; i < express.length(); i++) {
+			// find variables and ignore multiple instances of same variable
+			char currChar = express.charAt(i);
+			if (Character.isLetter(currChar) && vars.indexOf(currChar) == -1) {
+				varCount++;
+				vars += currChar;
+			}
+		}
+		resp.getWriter().println("Variables: " + vars);
+		resp.getWriter().println("Number of variables: " + varCount);
+
+		int numOfRows = (int) Math.pow(2, varCount);
+		int boolVector = 0x0;
+		List<String> rows = new ArrayList<String>(numOfRows);
+
+		// construct input strings with T/F instead of variables
+		for (int i = 0; i < numOfRows; i++) {
+			String rowString = "";
+			for (int j = 0; j < express.length(); j++) {
+				int index = vars.indexOf(express.charAt(j));
+				if (index != -1) {
+					// extract 0 or 1 from boolVector for variable #j
+					int temp = ((boolVector >> (varCount - index - 1)) & 1);
+					if (temp == 1) {
+						rowString += 'T';
+					} else if (temp == 0) {
+						rowString += 'F';
+					}
+				} else {
+					rowString += express.charAt(j);
+				}
+			}
+			boolVector++;
+			rows.add(rowString);
+		}
+		
+		List<String> postfixRows = new ArrayList<String>(numOfRows);
+		
+		for (int i = 0; i < numOfRows; i++) {
+			String postfix = toPostFix(rows.get(i));
+			resp.getWriter().println("Postfix: " + postfix);
+			postfixRows.add(postfix);
+		}
+
+		// //add row for header
+		// numOfRows++;
+
+		// reset boolVector
+		boolVector = 0x0;
+
+		// header row
+		if (varCount > 0) {
+			resp.setContentType("text/html");
+			resp.getWriter().println("<html>" + "<body>" + "<table>" + "<tr>");
+			for (int i = 0; i < varCount; i++) {
+				resp.getWriter().println("<td>" + vars.charAt(i) + "</td>");
+			}
+			resp.getWriter().println("<td>" + express + "</td>");
+		}
+
+		for (int i = 0; i < numOfRows; i++) {
+			resp.getWriter().println("<tr>");
+			for (int j = 0; j < vars.length(); j++) {
+				int boolVal = (boolVector >> (varCount - j - 1) & 1);
+				resp.getWriter().println("<td>" + boolVal + "</td>");
+			}
+			boolVector++;
+			resp.getWriter().println("<td>" + evaluate(postfixRows.get(i)) + "</td>");
+			resp.getWriter().println("</tr>");
+		}
+		resp.getWriter().println("</table>" + "</body></html>");
+	}
 }

@@ -188,5 +188,49 @@ public class EvalServlet extends HttpServlet {
 	    for (int i = 0; i < numOfRows; i++) {
 	    	resp.getWriter().println("Postfix: " + toPostFix(rows.get(i)));
 	    }
+	    
+	    
+//	    //add row for header
+//	    numOfRows++;
+	    
+	    
+	    //reset boolVector
+	    boolVector = 0x0;
+	    
+	    //header row
+	    if (varCount > 0) {
+		    resp.setContentType("text/html");
+		    resp.getWriter().println(
+"<html>" +
+	"<body>" + 
+		"<table>" +
+			"<tr>");
+		    for (int i = 0; i < varCount; i++) {
+		    	resp.getWriter().println(
+		    	"<td>"+
+		    	vars.charAt(i)+
+		    	"</td>");
+		    }
+	    }
+	   
+	    
+	    for (int i = 0; i < numOfRows; i++) {
+	    	resp.getWriter().println(
+	"<tr>");
+	    	for (int j = 0; j < vars.length(); j++) {
+	    		int boolVal = (boolVector >> (varCount-j-1) & 1);
+	    		resp.getWriter().println(
+	    "<td>"+ 
+	    boolVal + 
+	    "</td>");
+	    	}
+	    	boolVector++;
+	    	//TODO: Print evaluate result in this column
+	    	resp.getWriter().println(
+   "</tr>");
+	    }
+	    resp.getWriter().println(
+	"</table>"+
+"</body></html>");
 	}   
 }

@@ -6,6 +6,7 @@
 <html>
   <head>
 	<meta name="viewport" content="width=device-width">
+	<title>The Amazing Truth Table Generator</title>
 	<link type="text/css" rel="stylesheet" href="/stylesheets/bootstrap.min.css" />
 	<link rel="stylesheet" type="text/css" href="stylesheets/eval.css" />
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js" type="text/javascript"></script>
@@ -76,6 +77,7 @@
 	}
 
 	public int evaluate(String postfix) {
+		
 		Stack<Boolean> operandStack = new Stack<Boolean>();
 
 		for (int i = 0; i < postfix.length(); i++) {

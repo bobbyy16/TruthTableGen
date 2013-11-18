@@ -7,6 +7,7 @@
   <head>
 	<meta name="viewport" content="width=device-width">
 	<link type="text/css" rel="stylesheet" href="/stylesheets/bootstrap.min.css" />
+	<link rel="stylesheet" type="text/css" href="stylesheets/eval.css" />
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js" type="text/javascript"></script>
 	<script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.1/js/bootstrap.min.js" type="text/javascript"></script>
 
@@ -197,12 +198,6 @@
 	}
 %>
 
-<html>
-	<head>
-		<link rel="stylesheet" type="text/css" href="stylesheets/eval.css">
-	</head>
-	<body>
-
 <%
 if (express != null) {
 %>
@@ -268,15 +263,11 @@ if (express != null) {
 <%
 		for (int i = 0; i < varCount; i++) {
 %>
-				<td>
-					<%=vars.charAt(i)%>
-				</td>
+				<td><%=vars.charAt(i)%></td>
 <%
 		}
 %>
-				<td>
-					<%=express%>
-				</td>
+				<td><%=express%></td>
 <%
 	}
 	
@@ -287,15 +278,11 @@ if (express != null) {
 		for (int j = 0; j < vars.length(); j++) {
 			int boolVal = (boolVector >> (varCount - j - 1) & 1);
 %>
-				<td>
-					<%=boolVal%>
-				</td>
+				<td><%=boolVal%></td>
 <%
 		}
 %>
-				<td>
-					<%=evaluate(postfixRows.get(i))%>
-				</td>
+				<td><%=evaluate(postfixRows.get(i))%></td>
 			</tr>
 <%
 		boolVector++;

@@ -74,6 +74,10 @@
 
 	public int evaluate(String postfix) {
 		Stack<Boolean> operandStack = new Stack<Boolean>();
+		
+		if (postfix == "Improperly Formatted") {
+			return -1;
+		}
 
 		for (int i = 0; i < postfix.length(); i++) {
 			char current = postfix.charAt(i);
@@ -197,10 +201,6 @@
 
 <%
 if (express != null) {
-%>
-	<h4><center>Input expression: <%=express %></p></h4></center>
-	<hr>
-<%
 	int varCount = 0;
 	String vars = "";
 	for (int i = 0; i < express.length(); i++) {
@@ -254,8 +254,10 @@ if (express != null) {
 	boolVector = 0x0;
 			
 	//header row
-	if (varCount > 0) {
+	if (varCount > 0 && postfixRows.get(0) != "Improperly Formatted") {
 %>
+	<h4><center>Input expression: <%=express %></p></h4></center>
+	<hr>
 	<div class = "table">
 		<table>
 			<tr>
@@ -267,9 +269,7 @@ if (express != null) {
 		}
 %>
 				<td><%=express%></td>
-<%
-	}
-	
+<%	
 	for (int i = 0; i < numOfRows; i++) {
 %>
 			<tr>
@@ -281,10 +281,16 @@ if (express != null) {
 <%
 		}
 %>
-				<td><%=evaluate(postfixRows.get(i))%></td>
-			</tr>
+				<td>
+					<%=evaluate(postfixRows.get(i))%></td>
+				</tr>
 <%
 		boolVector++;
+	}
+	} else {
+%>
+	<h4><center>Enter a valid expression!</h4></center>
+<%
 	}
 }
 %>

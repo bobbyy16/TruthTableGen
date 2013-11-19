@@ -10,7 +10,7 @@ response.getWriter().println(test);
 
 <html>
 	<body>
-		<p><%= test %></p>
+		<p><%=test%></p>
 	</body>
 </html>
 
